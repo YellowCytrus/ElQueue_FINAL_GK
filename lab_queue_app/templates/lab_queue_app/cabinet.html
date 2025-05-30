@@ -50,20 +50,24 @@
                     {% if subjects_with_works %}
                         {% for subject_item in subjects_with_works %}
                             <div class="subject-section mb-4" data-subject-id="{{ subject_item.subject.id }}">
-                                <h4 class="mb-3">
-                                    {{ subject_item.subject.name }}
-                                    <small class="text-muted d-block mt-1">
-                                        <i class="fas fa-calendar me-2"></i>{{ subject_item.schedule_text }}
-                                        {% if subject_item.is_running %}
-                                            <span class="badge bg-success ms-2">идёт</span>
-                                        {% else %}
-                                            {% if subject_item.next_date %}
-                                                <span class="badge bg-info ms-2">следующая пара: {{ subject_item.next_date }}</span>
+                                <div class="subject-header d-flex justify-content-between align-items-center cursor-pointer" 
+                                     onclick="toggleSubjectWorks({{ subject_item.subject.id }})">
+                                    <h4 class="mb-3">
+                                        {{ subject_item.subject.name }}
+                                        <small class="text-muted d-block mt-1">
+                                            <i class="fas fa-calendar me-2"></i>{{ subject_item.schedule_text }}
+                                            {% if subject_item.is_running %}
+                                                <span class="badge bg-success ms-2">идёт</span>
+                                            {% else %}
+                                                {% if subject_item.next_date %}
+                                                    <span class="badge bg-info ms-2">следующая пара: {{ subject_item.next_date }}</span>
+                                                {% endif %}
                                             {% endif %}
-                                        {% endif %}
-                                    </small>
-                                </h4>
-                                <div class="works-list">
+                                        </small>
+                                    </h4>
+                                    <i class="fas fa-chevron-down subject-toggle-icon"></i>
+                                </div>
+                                <div class="works-list collapse" id="subject-works-{{ subject_item.subject.id }}">
                                     {% for item in subject_item.works %}
                                         <div class="queue-item work-item" data-work-id="{{ item.work.id }}">
                                             <div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -229,6 +233,69 @@
     </div>
 
     <script>
+        // Добавляем новые стили
+        const style = document.createElement('style');
+        style.textContent = `
+            .cursor-pointer {
+                cursor: pointer;
+            }
+            .subject-header:hover {
+                background-color: rgba(var(--purple-rgb), 0.05);
+                border-radius: 8px;
+                padding: 8px;
+                margin: -8px;
+            }
+            .subject-toggle-icon {
+                transition: transform 0.3s ease;
+            }
+            .subject-toggle-icon.rotated {
+                transform: rotate(180deg);
+            }
+            .works-list {
+                margin-top: 1rem;
+            }
+            .works-list.show {
+                animation: slideDown 0.3s ease-out;
+            }
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            /* Стили для бейджа "Сдано" */
+            .badge.bg-success {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75em;
+                font-weight: 700;
+                line-height: 1.2;
+                display: inline-flex;
+                align-items: center;
+                height: 24px;
+                margin-top: auto;
+                margin-bottom: auto;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Функция для переключения видимости работ
+        function toggleSubjectWorks(subjectId) {
+            const worksContainer = document.getElementById(`subject-works-${subjectId}`);
+            const icon = worksContainer.parentElement.querySelector('.subject-toggle-icon');
+            
+            if (worksContainer.classList.contains('show')) {
+                worksContainer.classList.remove('show');
+                icon.classList.remove('rotated');
+            } else {
+                worksContainer.classList.add('show');
+                icon.classList.add('rotated');
+            }
+        }
+
         // Функции для модальных окон
         async function openJoinModal(workId, labName, availableWorks, isFromSubjects = false) {
             console.log('openJoinModal called with:', {workId, labName, availableWorks, isFromSubjects});
